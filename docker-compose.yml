@@ -1,9 +1,9 @@
 version: '3.4'
 
 services:
-  rocky-xfce4-xrdp:
-    image: rocky-xfce4-xrdp:latest
-    hostname: rocky-xfce4-xrdp
+  rockylinux-xfce4-xrdp:
+    image: rockylinux-xfce4-xrdp:9
+    hostname: rockylinux-xfce4-xrdp
     shm_size: '1gb'
     build:
       context: .
