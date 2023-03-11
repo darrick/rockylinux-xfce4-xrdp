@@ -2,12 +2,9 @@ version: '3.4'
 
 services:
   rockylinux-xfce4-xrdp:
-    image: rockylinux-xfce4-xrdp:9
+    image: darrick1/rockylinux-xfce4-xrdp:7
     hostname: rockylinux-xfce4-xrdp
     shm_size: '1gb'
-    build:
-      context: .
-      dockerfile: ./Dockerfile
     tmpfs:
       - /run
       - /tmp
