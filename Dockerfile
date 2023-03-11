@@ -34,14 +34,31 @@ ENV container docker
 # Update system, install init system and add repo
 # Install PulseAudio
 # Install XFCE4
+
 # Install XRDP
 RUN dnf -y install epel-release; \
     dnf -y install pulseaudio pulseaudio-libs; \
-    dnf -y group install xfce; \
+    dnf -y install \
+        Thunar \
+        openssh-askpass \
+        thunar-archive-plugin \
+        thunar-volman \
+        tumbler \
+        xfce-polkit \
+        xfce4-appfinder \
+        xfce4-panel \
+        xfce4-pulseaudio-plugin \
+        xfce4-session \
+        xfce4-settings \
+        xfce4-terminal \
+        xfconf \
+        xfdesktop \
+        xfwm4; \
     dnf -y install xrdp xorgxrdp; \
     dnf -y install alsa-plugins-pulseaudio pulseaudio-module-x11; \
     dnf -y remove network-manager-applet xfce4-power-manager xfce4-screensaver NetworkManager-wifi upower; \
-    dnf -y autoremove;
+    dnf -y autoremove; \
+    dnf -y clean all;
 
 # Install PulseAudio
 COPY --from=builder /usr/lib64/pulse-15.0/modules /usr/lib64/pulse-15.0/modules
