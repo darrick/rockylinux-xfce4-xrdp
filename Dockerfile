@@ -15,7 +15,9 @@ RUN yum -y install epel-release; \
 
 RUN yumdownloader --source pulseaudio; \
     rpm --install pulseaudio*.src.rpm; \
-    rpmbuild -bb /root/rpmbuild/SPECS/pulseaudio.spec;
+    sed -i '1 i\%global enable_jack 1' /root/rpmbuild/SPECS/pulseaudio.spec; \
+    rpmbuild -bb /root/rpmbuild/SPECS/pulseaudio.spec; \
+    rpm -i --nodeps /root/rpmbuild/RPMS/x86_64/pulseaudio-module-jack-10*.rpm;
 
 RUN git clone https://github.com/neutrinolabs/pulseaudio-module-xrdp.git; \
     cd pulseaudio-module-xrdp; \
@@ -81,7 +83,6 @@ RUN systemctl set-default multi-user.target; \
 ADD etc/xrdp /etc/xrdp
 ADD etc/skel /etc/skel
 ADD etc/pulse /etc/pulse
-ADD usr /usr
 ADD 999999_001.wav /tone.wav
 
 RUN yum -y install  wget rsyslog
