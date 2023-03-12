@@ -80,9 +80,17 @@ RUN systemctl set-default multi-user.target; \
 
 ADD etc/xrdp /etc/xrdp
 ADD etc/skel /etc/skel
+ADD etc/pulse /etc/pulse
 ADD usr /usr
 ADD 999999_001.wav /tone.wav
 
+RUN yum -y install  wget rsyslog
+
+RUN wget --no-check-certificate https://copr.fedorainfracloud.org/coprs/jsynacek/systemd-backports-for-centos-7/repo/epel-7/jsynacek-systemd-backports-for-centos-7-epel-7.repo -O /etc/yum.repos.d/jsynacek-systemd-centos-7.repo
+
+RUN yum -y update systemd ; yum clean all
+
+RUN systemctl enable rsyslog;
 # Add a user
 #RUN adduser -c Rivendell\ Audio --groups audio,wheel rduser && echo rduser:rduser | chpasswd
 
