@@ -1,7 +1,4 @@
-ARG XRDPPULSE_VER="0.6"
-ARG PULSE_VER="10.0"
-
-FROM rockylinux:9 as builder
+FROM rockylinux:8 as builder
 
 #Taken from: https://github.com/neutrinolabs/pulseaudio-module-xrdp/wiki/Build-on-CentOS-7.x
 
@@ -18,28 +15,25 @@ RUN dnf download --source pulseaudio; \
 
 RUN sed -i '1 i\%global enable_jack 1' /root/rpmbuild/SPECS/pulseaudio.spec; \
     rpmbuild -bb /root/rpmbuild/SPECS/pulseaudio.spec; \
-    rpm -i /root/rpmbuild/RPMS/x86_64/pulseaudio-module-jack-15*.rpm;
+    rpm -i /root/rpmbuild/RPMS/x86_64/pulseaudio-module-jack-14*.rpm;
 
 RUN git clone https://github.com/neutrinolabs/pulseaudio-module-xrdp.git; \
     cd pulseaudio-module-xrdp; \
-    ./bootstrap && ./configure PULSE_DIR=/root/rpmbuild/BUILD/pulseaudio-15.0; \
+    ./bootstrap && ./configure PULSE_DIR=/root/rpmbuild/BUILD/pulseaudio-14.0; \
     make && make install;
 
 #Adapted from https://github.com/danielguerra69/alpine-xfce4-xrdp
 
-FROM rockylinux:9
-LABEL Name=rocky-xfce4-xrdp Version=0.0.1
+FROM rockylinux:8
+LABEL Name=rocky-xfce4-xrdp Version=8.0.2
 ENV container docker
 
-# Update system, install init system and add repo
-# Install PulseAudio
-# Install XFCE4
+RUN dnf -y install epel-release;
 
-# Install XRDP
-RUN dnf -y install epel-release; \
-    dnf -y install pulseaudio pulseaudio-libs; \
-    dnf -y install \
+# Install XFCE4
+RUN dnf -y install \
         Thunar \
+        fuse \
         openssh-askpass \
         thunar-archive-plugin \
         thunar-volman \
@@ -53,15 +47,25 @@ RUN dnf -y install epel-release; \
         xfce4-terminal \
         xfconf \
         xfdesktop \
-        xfwm4; \
-    dnf -y install xrdp xorgxrdp; \
-    dnf -y install alsa-plugins-pulseaudio pulseaudio-module-x11; \
-    dnf -y remove network-manager-applet xfce4-power-manager xfce4-screensaver NetworkManager-wifi upower; \
-    dnf -y autoremove; \
-    dnf -y clean all;
+        xfwm4;
+
+# Install XRDP
+RUN dnf -y install xrdp xorgxrdp;
+ADD etc/sysconfig /etc/sysconfig
 
 # Install PulseAudio
-COPY --from=builder /usr/lib64/pulse-15.0/modules /usr/lib64/pulse-15.0/modules
+RUN dnf -y install \
+        pulseaudio \
+        pulseaudio-libs \
+        alsa-plugins-pulseaudio \
+        pulseaudio-module-x11;
+COPY --from=builder /usr/lib64/pulse-14.0/modules /usr/lib64/pulse-14.0/modules
+COPY --from=builder /root/rpmbuild/RPMS/x86_64/pulseaudio-module-jack-14*.rpm /root
+COPY --from=builder /usr/libexec/pulseaudio-module-xrdp/load_pa_modules.sh /usr/libexec/pulseaudio-module-xrdp/load_pa_modules.sh
+COPY --from=builder /etc/xdg/autostart/pulseaudio-xrdp.desktop /etc/xdg/autostart/pulseaudio-xrdp.desktop
+ADD etc/pulse /etc/pulse
+#RUN rpm -i /root/pulseaudio-module-jack-14*.rpm;
+
 
 #
 # Configure systemd
@@ -79,15 +83,20 @@ VOLUME [ "/sys/fs/cgroup" ]
 
 RUN systemctl set-default multi-user.target; \
     systemctl enable xrdp; \
-    systemctl enable xrdp-sesman;
+    systemctl enable xrdp-sesman; \
+    systemctl unmask systemd-logind.service
 
-ADD etc/xrdp /etc/xrdp
-ADD etc/skel /etc/skel
-ADD usr /usr
-ADD 999999_001.wav /tone.wav
+# Setup LANG
+RUN dnf -y install glibc-langpack-en; \
+    sed -i -e 's/C.UTF-8/en_US.utf8/' /etc/locale.conf;
+
+RUN dnf -y autoremove; \
+    dnf -y clean all;
 
 # Add a user
 #RUN adduser -c Rivendell\ Audio --groups audio,wheel rduser && echo rduser:rduser | chpasswd
+ADD 999999_001.wav /tone.wav
+
 
 EXPOSE 3389
 
