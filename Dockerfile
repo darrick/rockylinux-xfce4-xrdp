@@ -52,6 +52,7 @@ RUN dnf -y install \
 # Install XRDP
 RUN dnf -y install xrdp xorgxrdp;
 ADD etc/sysconfig /etc/sysconfig
+ADD etc/xrdp /etc/xrdp
 
 # Install PulseAudio
 RUN dnf -y install \
@@ -64,8 +65,9 @@ COPY --from=builder /root/rpmbuild/RPMS/x86_64/pulseaudio-module-jack-14*.rpm /r
 COPY --from=builder /usr/libexec/pulseaudio-module-xrdp/load_pa_modules.sh /usr/libexec/pulseaudio-module-xrdp/load_pa_modules.sh
 COPY --from=builder /etc/xdg/autostart/pulseaudio-xrdp.desktop /etc/xdg/autostart/pulseaudio-xrdp.desktop
 ADD etc/pulse /etc/pulse
+RUN rm -f /etc/systemd/user/sockets.target.wants/pulseaudio.socket; \
+    rm -f /etc/systemd/user/default.target.wants/pulseaudio.service;
 #RUN rpm -i /root/pulseaudio-module-jack-14*.rpm;
-
 
 #
 # Configure systemd
@@ -84,19 +86,19 @@ VOLUME [ "/sys/fs/cgroup" ]
 RUN systemctl set-default multi-user.target; \
     systemctl enable xrdp; \
     systemctl enable xrdp-sesman; \
-    systemctl unmask systemd-logind.service
+    systemctl unmask systemd-logind.service;
 
 # Setup LANG
 RUN dnf -y install glibc-langpack-en; \
     sed -i -e 's/C.UTF-8/en_US.utf8/' /etc/locale.conf;
 
-RUN dnf -y autoremove; \
+RUN dnf -y remove policycoreutils; \
+    dnf -y autoremove; \
     dnf -y clean all;
 
 # Add a user
-#RUN adduser -c Rivendell\ Audio --groups audio,wheel rduser && echo rduser:rduser | chpasswd
+#RUN adduser -c Rivendell\ Audio --groups audio,wheel rd && echo rd:letmein | chpasswd
 ADD 999999_001.wav /tone.wav
-
 
 EXPOSE 3389
 
