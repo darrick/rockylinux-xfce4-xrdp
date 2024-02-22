@@ -65,8 +65,8 @@ COPY --from=builder /root/rpmbuild/RPMS/x86_64/pulseaudio-module-jack-14*.rpm /r
 COPY --from=builder /usr/libexec/pulseaudio-module-xrdp/load_pa_modules.sh /usr/libexec/pulseaudio-module-xrdp/load_pa_modules.sh
 COPY --from=builder /etc/xdg/autostart/pulseaudio-xrdp.desktop /etc/xdg/autostart/pulseaudio-xrdp.desktop
 ADD etc/pulse /etc/pulse
-RUN rm -f /etc/systemd/user/sockets.target.wants/pulseaudio.socket; \
-    rm -f /etc/systemd/user/default.target.wants/pulseaudio.service;
+#RUN rm -f /etc/systemd/user/sockets.target.wants/pulseaudio.socket; \
+ #   rm -f /etc/systemd/user/default.target.wants/pulseaudio.service;
 #RUN rpm -i /root/pulseaudio-module-jack-14*.rpm;
 
 #
